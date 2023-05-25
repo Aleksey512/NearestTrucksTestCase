@@ -1,0 +1,30 @@
+# -*- coding: utf-8 -*-
+# Главное
+Django
+gunicorn
+django-cors-headers
+asgiref
+sqlparse
+tzdata
+pytz
+django-environ
+psycopg2-binary
+pandas
+typing
+
+# Django Rest Framework
+djangorestframework
+django-filter
+
+# API документация
+drf-yasg
+
+# Celery
+Celery
+django_celery_beat
+
+# Redis
+redis
+
+# Карты и геолокация
+geopy

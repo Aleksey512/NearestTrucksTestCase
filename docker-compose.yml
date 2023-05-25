@@ -1,0 +1,109 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    command: bash -c "
+      cd app &&
+      gunicorn --bind 0.0.0.0:5858 NearestTrucksTestCase.wsgi"
+    hostname: web
+    volumes:
+      - static_volume:/app/app/staticfiles
+      - .:/app
+    expose:
+      - 5858
+    env_file:
+      - app/NearestTrucksTestCase/.env
+    networks:
+      - django-network
+    links:
+      - db:db
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres
+    container_name: db
+    hostname: db
+    environment:
+      - POSTGRES_DB=cargoDB
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - /opt/pgsql:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d cargoDB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - django-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
+
+  nginx:
+    build: ./nginx
+    hostname: nginx
+    volumes:
+      - static_volume:/usr/src/app/staticfiles/
+    networks:
+      - django-network
+    ports:
+      - "8000:80"
+    depends_on:
+      - web
+
+  redis:
+    image: redis:7.0.4-alpine
+    hostname: redis
+    networks:
+      - django-network
+
+  celery:
+    image: celery:4.0.2
+    build: .
+    hostname: celery
+    restart: always
+    command: celery -A NearestTrucksTestCase worker -l info
+    volumes:
+      - ./app/:/app/
+    environment:
+      - DB_HOST=db
+      - DB_NAME=cargoDB
+      - DB_USER=postgres
+      - DB_PASS=postgres
+    depends_on:
+      - redis
+    networks:
+      - django-network
+
+  celery-beat:
+    command: celery -A NearestTrucksTestCase beat -l info
+    hostname: celery-beat
+    build: .
+    volumes:
+      - ./app/:/app/
+    environment:
+      - DB_HOST=db
+      - DB_NAME=cargoDB
+      - DB_USER=postgres
+      - DB_PASS=postgres
+    depends_on:
+      - redis
+    networks:
+      - django-network
+
+networks:
+  django-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  static_volume:
