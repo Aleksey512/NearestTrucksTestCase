@@ -5,7 +5,7 @@ services:
     build: .
     command: bash -c "
       cd app &&
-      gunicorn --bind 0.0.0.0:5858 NearestTrucksTestCase.wsgi"
+      entrypoint.prod.sh"
     hostname: web
     volumes:
       - static_volume:/app/app/staticfiles
