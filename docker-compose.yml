@@ -3,7 +3,7 @@ version: '3.9'
 services:
   web:
     build: .
-    command: bash -c "entrypoint.prod.sh"
+    command: bash -c "./entrypoint.prod.sh"
     hostname: web
     volumes:
       - static_volume:/app/app/staticfiles
